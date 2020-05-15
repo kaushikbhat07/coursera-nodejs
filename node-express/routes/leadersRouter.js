@@ -38,8 +38,8 @@ leadersRouter.route('/:leaderId')
 		res.end('Will add the leader: ' + req.body.name + ' with details: ' + req.body.description);
 	})
 	.put((req, res, next) => {
-		res.statusCode = 403;
-		res.end('PUT operation not supported on /leaders');
+		// res.statusCode = 403;
+		res.end('Leader with the id ' + req.params.leaderId + ' updated');
 	})
 	.delete((req, res, next) => {
 		res.end('Deleting one leader');

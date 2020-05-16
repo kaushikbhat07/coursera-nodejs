@@ -12,7 +12,7 @@ MongoClient.connect(url, (err, client) => {
 
     const db = client.db(dbname);
     const collection = db.collection("dishes");
-    collection.insertOne({"name": "Uthappizza", "description": "test"},
+    collection.insertOne({"name": "Cheese burst pizza", "description": "test"},
     (err, result) => {
         assert.equal(err,null);
 
@@ -32,5 +32,4 @@ MongoClient.connect(url, (err, client) => {
             });
         });
     });
-
 });

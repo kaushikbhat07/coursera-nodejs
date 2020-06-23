@@ -19,19 +19,18 @@ const mongoose = require('mongoose');
 // const Dishes = require('./models/dishes');
 
 // const url = 'mongodb://localhost:27017/conFusion';
-const connect = mongoose.connect(url);
-
-app.use(passport.initialize());
-app.use(passport.session());
+const connect = mongoose.connect(url, {
+	useMongoClient: true
+});
 
 var app = express();
-app.use(session({
-	name: 'user-session',
-	secret: '12345-67890-09876-54321',
-	saveUninitialized: false,
-	resave: false,
-	store: new FileStore()
-}));
+// app.use(session({
+// 	name: 'user-session',
+// 	secret: '12345-67890-09876-54321',
+// 	saveUninitialized: false,
+// 	resave: false,
+// 	store: new FileStore()
+// }));
 
 //auth
 
@@ -51,6 +50,10 @@ app.use(express.json());
 app.use(express.urlencoded({
 	extended: false
 }));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // connect to DB

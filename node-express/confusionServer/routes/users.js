@@ -59,20 +59,23 @@ router.post('/login', passport.authenticate('local'), (req, res) => {
 });
 
 router.get('/logout', (req, res) => {
-	if (req.session) {
-		req.session.destroy();
-		res.clearCookie('session-id');
-		res.redirect('/');
-	} else {
-		var err = new Error('You are not logged in!');
-		err.status = 403;
-		next(err);
-	}
+	req.logout();
+	res.status(200).json({
+		status: 'bye'
+	});
+	res.redirect('/');
 });
 
 /* GET users listing. */
-router.get('/', function (req, res, next) {
-	res.send('respond with a resource');
-});
+router.route('/')
+	.get(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+		User.find({})
+			.then((user) => {
+				res.statusCode = 200;
+				res.setHeader('Content-Type', 'application/json');
+				res.json(user);
+			}, (err) => next(err))
+			.catch((err) => next(err));
+	});
 
 module.exports = router;

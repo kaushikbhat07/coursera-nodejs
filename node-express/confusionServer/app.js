@@ -13,6 +13,7 @@ var passport = require('passport');
 var authenticate = require('./authenticate');
 var config = require('./config');
 const url = config.mongoUrl;
+const uploadRouter = require('./routes/uploadRouter');
 
 const mongoose = require('mongoose');
 
@@ -22,6 +23,15 @@ const mongoose = require('mongoose');
 const connect = mongoose.connect(url);
 
 var app = express();
+
+// Secure traffic only
+app.all('*', (req, res, next) => {
+	if (req.secure) {
+		return next();
+	} else {
+		res.redirect(307, 'https://' + req.hostname + ':' + app.get('secPort') + req.url);
+	}
+});
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -45,6 +55,7 @@ app.set('view engine', 'jade');
 app.use('/dishes', dishRouter);
 app.use('/promotions', promoRouter);
 app.use('/leaders', leaderRouter);
+app.use('/imageUpload',uploadRouter);
 
 app.use(logger('dev'));
 app.use(express.json());

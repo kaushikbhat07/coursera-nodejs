@@ -9,6 +9,7 @@ var usersRouter = require('./routes/users');
 var dishRouter = require('./routes/dishRouter');
 var promoRouter = require('./routes/promoRouter');
 var leaderRouter = require('./routes/leadersRouter');
+var favoriteRouter = require('./routes/favoritesRouter');
 var passport = require('passport');
 var authenticate = require('./authenticate');
 var config = require('./config');
@@ -55,7 +56,8 @@ app.set('view engine', 'jade');
 app.use('/dishes', dishRouter);
 app.use('/promotions', promoRouter);
 app.use('/leaders', leaderRouter);
-app.use('/imageUpload',uploadRouter);
+app.use('/imageUpload', uploadRouter);
+app.use('/favorites', favoriteRouter);
 
 app.use(logger('dev'));
 app.use(express.json());

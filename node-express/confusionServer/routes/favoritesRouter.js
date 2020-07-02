@@ -5,6 +5,7 @@ const Favorites = require('../models/favorite');
 var authenticate = require('../authenticate');
 const favoriteRouter = express.Router();
 const cors = require('./cors');
+const Users = require('../models/users');
 
 favoriteRouter.use(bodyParser.json());
 
@@ -13,11 +14,12 @@ favoriteRouter.route('/')
 		res.sendStatus(200);
 	})
 	.get(cors.cors, authenticate.verifyUser, (req, res, next) => {
+		// console.log(req.user);
 		Favorites.find({
 				user: req.user._id
 			})
 			.populate('dish')
-			.populate('author')
+			.populate('user')
 			.then((Favorites) => {
 				res.statusCode = 200;
 				res.setHeader('Content-Type', 'application/json');
@@ -25,22 +27,23 @@ favoriteRouter.route('/')
 			}, (err) => next(err))
 			.catch((err) => next(err));
 	})
-	.post(cors.corsWithOptions, (req, res, next) => {
+	.post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
 		Favorites.findOne({
 				user: req.user._id
 			})
 			.then((favorite) => {
 				if (favorite != null) {
 					for (var i = 0; i < req.body.length; i++) {
-						if (favorite.dishes.indexOf(req.body[i]._id) < 0) {
-							favorite.dishes.push(req.body[i]);
+						// checking if dish exists
+						if (favorite.dish.indexOf(req.body[i]._id) < 0) {
+							favorite.dish.push(req.body[i]);
 						}
 					}
 					favorite.save()
 						.then((favorite) => {
 							Favorites.findById(favorite._id)
 								.populate('user')
-								.populate('dishes')
+								.populate('dish')
 								.then((favorite) => {
 									res.statusCode = 200;
 									res.setHeader('Content-Type', 'application/json');
@@ -50,13 +53,9 @@ favoriteRouter.route('/')
 				} else {
 					Favorites.create({
 							user: req.user._id,
-							dishes: req.body
+							dish: req.body.dish
 						})
-						.then((favourite) => {
-							console.log({
-								user: req.user._id,
-								dishes: req.body
-							});
+						.then((favorite) => {
 							Favorites.findById(favorite._id)
 								.populate('user')
 								.populate('dishes')
@@ -74,7 +73,7 @@ favoriteRouter.route('/')
 	})
 	.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
 		res.statusCode = 403;
-		res.end('PUT operation not supported on /Favorites');
+		res.enpnd('PUT operation not supported on /Favorites');
 	})
 	.delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
 		Favorites.remove({
@@ -88,48 +87,72 @@ favoriteRouter.route('/')
 			.catch((err) => next(err));
 	});
 
-favoriteRouter.route('/:favId')
+favoriteRouter.route('/:dishId')
 	.options(cors.corsWithOptions, (req, res) => {
 		res.sendStatus(200);
 	})
-	.get(cors.cors, (req, res, next) => {
-		Favorites.findById({
+	.get(cors.cors, authenticate.verifyUser, (req, res, next) => {
+		Favorites.findOne({
 				user: req.user._id
 			})
-			.populate('dish')
-			.populate('author')
-			.then((fav) => {
-				res.statusCode = 200;
-				res.setHeader('Content-Type', 'application/json');
-				res.json(fav);
+			.then((favorites) => {
+				if (!favorites) {
+					res.statusCode = 200;
+					res.setHeader('Content-Type', 'application/json');
+					return res.json({
+						"exists": false,
+						"favorites": favorites
+					});
+				} else {
+					if (favorites.dishes.indexOf(req.params.dishId) < 0) {
+						res.statusCode = 200;
+						res.setHeader('Content-Type', 'application/json');
+						return res.json({
+							"exists": false,
+							"favorites": favorites
+						});
+					} else {
+						res.statusCode = 200;
+						res.setHeader('Content-Type', 'application/json');
+						return res.json({
+							"exists": true,
+							"favorites": favorites
+						});
+					}
+				}
+
 			}, (err) => next(err))
-			.catch((err) => next(err));
+			.catch((err) => next(err))
 	})
-	.post((req, res, next) => {
+	.post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+		// console.log("req.user._id" + req.user._id);
 		Favorites.findOne({
 				user: req.user._id
 			})
 			.then((favorite) => {
 				if (favorite != null) {
-					if (favorite.dishes.indexOf(req.params.dishId) < 0) {
-						favorite.dishes.push({
-							_id: req.params.dishId
+					if (favorite.dish.indexOf(req.params.dishId) < 0) {
+						favorite.dish.push({
+							"_id": req.params.dishId
 						});
 						favorite.save()
 							.then((favorite) => {
 								Favorites.findById(favorite._id)
 									.populate('user')
-									.populate('dishes')
+									.populate('dish')
 									.then((favorite) => {
 										res.statusCode = 200;
 										res.setHeader('Content-Type', 'application/json');
 										res.json(favorite);
 									})
-							}, (err) => next(err));
+							})
+							.catch((err) => {
+								return next(err);
+							});
 					} else {
 						Favorites.findById(favorite._id)
 							.populate('user')
-							.populate('dishes')
+							.populate('dish')
 							.then((favorite) => {
 								res.statusCode = 200;
 								res.setHeader('Content-Type', 'application/json');
@@ -139,15 +162,15 @@ favoriteRouter.route('/:favId')
 				} else {
 					Favorites.create({
 							user: req.user._id,
-							dishes: [{
+							dish: [{
 								_id: req.params.dishId
 							}]
 						})
-						.then((favourite) => {
+						.then((favorite) => {
 							console.log('Favorite Added ', favorite);
 							Favorites.findById(favorite._id)
 								.populate('user')
-								.populate('dishes')
+								.populate('dish')
 								.then((favorite) => {
 									res.statusCode = 200;
 									res.setHeader('Content-Type', 'application/json');
@@ -161,7 +184,7 @@ favoriteRouter.route('/:favId')
 	})
 	.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
 		res.statusCode = 403;
-		res.end('PUT operation not supported on /Favorites/' + req.params.favId);
+		res.end('PUT operation not supported on /Favorites/' + req.params.dishId);
 	})
 	.delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
 		Favorites.findOne({
@@ -169,14 +192,14 @@ favoriteRouter.route('/:favId')
 			})
 			.then((favorite) => {
 				if (favorite != null) {
-					const index = favorite.dishes.indexOf(req.params.dishId);
+					const index = favorite.dish.indexOf(req.params.dishId);
 					if (index > -1) {
-						favorite.dishes.splice(index, 1);
+						favorite.dish.splice(index, 1);
 						favorite.save()
 							.then((favorite) => {
 								Favorites.findById(favorite._id)
 									.populate('user')
-									.populate('dishes')
+									.populate('dish')
 									.then((favorite) => {
 										res.statusCode = 200;
 										res.setHeader('Content-Type', 'application/json');

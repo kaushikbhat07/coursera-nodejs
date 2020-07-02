@@ -7,7 +7,7 @@ var FavoriteSchema = new Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Dish'
 	}],
-	author: {
+	user: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'User'
 	}

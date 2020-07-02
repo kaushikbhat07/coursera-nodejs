@@ -9,11 +9,11 @@ const promoRouter = express.Router();
 promoRouter.use(bodyParser.json());
 
 promoRouter.route('/')
-.options(cors.corsWithOptions, (req, res) => {
-	res.sendStatus(200);
-})
+	.options(cors.corsWithOptions, (req, res) => {
+		res.sendStatus(200);
+	})
 	.get((req, res, next) => {
-		Promotions.find({})
+		Promotions.find(req.query)
 			.then((Promotions) => {
 				res.statusCode = 200;
 				res.setHeader('Content-Type', 'application/json');
@@ -46,9 +46,9 @@ promoRouter.route('/')
 	});
 
 promoRouter.route('/:promoId')
-.options(cors.corsWithOptions, (req, res) => {
-	res.sendStatus(200);
-})
+	.options(cors.corsWithOptions, (req, res) => {
+		res.sendStatus(200);
+	})
 	.get(cors.cors, (req, res, next) => {
 		Promotions.findById(req.params.promoId)
 			.then((Promotion) => {

@@ -15,6 +15,7 @@ var authenticate = require('./authenticate');
 var config = require('./config');
 const url = config.mongoUrl;
 const uploadRouter = require('./routes/uploadRouter');
+var commentRouter = require('./routes/commentRouter');
 
 const mongoose = require('mongoose');
 
@@ -58,6 +59,7 @@ app.use('/promotions', promoRouter);
 app.use('/leaders', leaderRouter);
 app.use('/imageUpload', uploadRouter);
 app.use('/favorites', favoriteRouter);
+app.use('/comments',commentRouter);
 
 app.use(logger('dev'));
 app.use(express.json());
